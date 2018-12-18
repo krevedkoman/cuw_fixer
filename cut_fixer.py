@@ -81,31 +81,32 @@ with open(filename, "rb") as f:
     number_of_cpus = f.read(0x01)
     fixed_fp.write(number_of_cpus)
 
-    version_txt_file_len = struct.unpack('>H', f.read(0x02))[0]
-    fixed_fp.write(struct.pack('>H', version_txt_file_len))
+    for cpu in range(ord(number_of_cpus)):
+        version_txt_file_len = struct.unpack('>H', f.read(0x02))[0]
+        fixed_fp.write(struct.pack('>H', version_txt_file_len))
 
-    version_txt_file = f.read(version_txt_file_len)
-    fixed_fp.write(version_txt_file)
+        version_txt_file = f.read(version_txt_file_len)
+        fixed_fp.write(version_txt_file)
 
-    s_format_len = header_len = struct.unpack('>L', f.read(0x04))[0]
-    fixed_fp.write(struct.pack('>L', s_format_len))
+        s_format_len = header_len = struct.unpack('>L', f.read(0x04))[0]
+        fixed_fp.write(struct.pack('>L', s_format_len))
 
-    s_format_crc32 = header_len = struct.unpack('>L', f.read(0x04))[0]
+        s_format_crc32 = header_len = struct.unpack('>L', f.read(0x04))[0]
 
-    s_format_data = f.read(s_format_len)
-    s_format_lines = s_format_data.split('\n')
-    new_s_format_data = ""
-    for s_line in s_format_lines:
-        new_line = FixMotCRC(s_line.strip())
-        new_s_format_data += new_line + "\r\n"
+        s_format_data = f.read(s_format_len)
+        s_format_lines = s_format_data.split('\n')
+        new_s_format_data = ""
+        for s_line in s_format_lines:
+            new_line = FixMotCRC(s_line.strip())
+            new_s_format_data += new_line + "\r\n"
 
-    #get rid of the last \r\n
-    new_s_format_data = new_s_format_data[0:-2]
+        #get rid of the last \r\n
+        new_s_format_data = new_s_format_data[0:-2]
 
-    s_format_crc32_fixed = binascii.crc32(new_s_format_data)
-    fixed_fp.write(struct.pack('>l', s_format_crc32_fixed))
+        s_format_crc32_fixed = binascii.crc32(new_s_format_data)
+        fixed_fp.write(struct.pack('>l', s_format_crc32_fixed))
 
-    fixed_fp.write(new_s_format_data)
+        fixed_fp.write(new_s_format_data)
 
     print "Header CRC: %08X" % (s_format_crc32)
     print "Header Computed CRC: %08X" % (s_format_crc32_fixed)
